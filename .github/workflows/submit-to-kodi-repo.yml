@@ -32,7 +32,7 @@ jobs:
 
       - name: Check with addon-checker
         run: |
-          kodi-addon-checker --branch matrix
+          kodi-addon-checker --branch leia
 
       - name: Install addon submitter
         run: |
@@ -40,7 +40,7 @@ jobs:
 
       - name: Submit addon
         run: |
-          submit-addon -r repo-scrapers -b matrix -s --pull-request metadata.tvshows.thetvdb.com.v4.python
+          submit-addon -r repo-scrapers -b leia -s --pull-request metadata.tvshows.thetvdb.com.v4.python
         env:
           GH_USERNAME: tvdb-kodi-ci
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
