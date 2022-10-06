@@ -39,12 +39,13 @@ import gzip
 import io
 import json as _json
 import ssl
+import urllib2
 from base64 import b64encode
 from email.message import Message
-from typing import Optional, Dict, Any, Tuple, Union, List
-from urllib import request as url_request
-from urllib.error import HTTPError as _HTTPError
-from urllib.parse import urlparse, urlencode
+from urllib2 import Request
+from urllib2 import HTTPError as _HTTPError
+from urllib import urlencode
+from urlparse import urlparse
 
 __all__ = [
     'RequestException',
@@ -57,33 +58,33 @@ __all__ = [
 
 class RequestException(IOError):
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return self.__str__()
 
 
 class ConnectionError(RequestException):
 
-    def __init__(self, message: str, url: str):
+    def __init__(self, message, url):
         super().__init__(message)
         self.message = message
         self.url = url
 
-    def __str__(self) -> str:
-        return f'ConnectionError for url {self.url}: {self.message}'
+    def __str__(self):
+        return "ConnectionError for url {0}: {1}".format(self.url, self.message)
 
 
 class HTTPError(RequestException):
 
-    def __init__(self, response: 'Response'):
+    def __init__(self, response):
         self.response = response
 
-    def __str__(self) -> str:
-        return f'HTTPError: {self.response.status_code} for url: {self.response.url}'
+    def __str__(self):
+        return "HTTPError: {0} for url: {1}".format(self.response.status_code, self.response.url)
 
 
 class HTTPMessage(Message):
 
-    def update(self, dct: Dict[str, str]) -> None:
+    def update(self, dct):
         for key, value in dct.items():
             self[key] = value
 
@@ -92,26 +93,26 @@ class Response:
     NULL = object()
 
     def __init__(self):
-        self.encoding: str = 'utf-8'
-        self.status_code: int = -1
-        self.headers: Dict[str, str] = {}
-        self.url: str = ''
-        self.content: bytes = b''
+        self.encoding = 'utf-8'
+        self.status_code = -1
+        self.headers = {}
+        self.url = ''
+        self.content = b''
         self._text = None
         self._json = self.NULL
 
-    def __str__(self) -> str:
-        return f'<Response [{self.status_code}]>'
+    def __str__(self):
+        return "<Response [{0}]>".format(self.status_code)
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return self.__str__()
 
     @property
-    def ok(self) -> bool:
+    def ok(self):
         return self.status_code < 400
 
     @property
-    def text(self) -> str:
+    def text(self):
         """
         :return: Response payload as decoded text
         """
@@ -119,15 +120,15 @@ class Response:
             self._text = self.content.decode(self.encoding)
         return self._text
 
-    def json(self) -> Optional[Union[Dict[str, Any], List[Any]]]:
+    def json(self):
         try:
             if self._json is self.NULL:
                 self._json = _json.loads(self.content)
             return self._json
         except ValueError as exc:
-            raise ValueError('Response content is not a valid JSON') from exc
+            raise ValueError('Response content is not a valid JSON')
 
-    def raise_for_status(self) -> None:
+    def raise_for_status(self):
         if not self.ok:
             raise HTTPError(self)
 
@@ -152,20 +153,20 @@ def _create_request(url_structure, params=None, data=None, headers=None, auth=No
         prepared_headers['Content-Type'] = 'application/x-www-form-urlencoded'
     if auth is not None:
         encoded_credentials = b64encode((auth[0] + ':' + auth[1]).encode('utf-8')).decode('utf-8')
-        prepared_headers['Authorization'] = f'Basic {encoded_credentials}'
+        prepared_headers['Authorization'] = "Basic {0}".format(encoded_credentials)
     if 'Accept-Encoding' not in prepared_headers:
         prepared_headers['Accept-Encoding'] = 'gzip'
-    return url_request.Request(full_url, body, prepared_headers)
+    return Request(full_url, body, prepared_headers)
 
 
-def post(url: str,
-         params: Optional[Dict[str, Any]] = None,
-         data: Optional[Dict[str, Any]] = None,
-         headers: Optional[Dict[str, str]] = None,
-         auth: Optional[Tuple[str, str]] = None,
-         timeout: Optional[float] = None,
-         verify: bool = True,
-         json: Optional[Dict[str, Any]] = None) -> Response:
+def post(url,
+         params = None,
+         data = None,
+         headers = None,
+         auth = None,
+         timeout = None,
+         verify = True,
+         json = None):
     """
     POST request
 
@@ -188,25 +189,25 @@ def post(url: str,
     request = _create_request(url_structure, params, data, headers, auth, json)
     context = None
     if url_structure.scheme == 'https':
-        context = ssl.SSLContext()
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS)
         if not verify:
             context.verify_mode = ssl.CERT_NONE
             context.check_hostname = False
     fp = None
     try:
-        r = fp = url_request.urlopen(request, timeout=timeout, context=context)
+        r = fp = urllib2.urlopen(request, timeout=timeout, context=context)
         content = fp.read()
     except _HTTPError as exc:
         r = exc
         fp = exc.fp
         content = fp.read()
     except Exception as exc:
-        raise ConnectionError(str(exc), request.full_url) from exc
+        raise ConnectionError(str(exc), request.full_url)
     finally:
         if fp is not None:
             fp.close()
     response = Response()
-    response.status_code = r.status if hasattr(r, 'status') else r.getstatus()
+    response.status_code = r.status if hasattr(r, 'status') else r.getcode()
     response.headers = r.headers
     response.url = r.url if hasattr(r, 'url') else r.geturl()
     if r.headers.get('Content-Encoding') == 'gzip':
@@ -217,12 +218,12 @@ def post(url: str,
     return response
 
 
-def get(url: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
-        auth: Optional[Tuple[str, str]] = None,
-        timeout: Optional[float] = None,
-        verify: bool = True) -> Response:
+def get(url,
+        params = None,
+        headers = None,
+        auth = None,
+        timeout = None,
+        verify = True):
     """
     GET request
 

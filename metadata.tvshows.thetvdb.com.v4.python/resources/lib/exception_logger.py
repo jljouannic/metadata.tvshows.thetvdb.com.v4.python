@@ -20,7 +20,6 @@ import sys
 from contextlib import contextmanager
 from platform import uname
 from pprint import pformat
-from typing import Text, Callable, Generator
 
 import xbmc
 

@@ -16,9 +16,9 @@ SUPPORTED_REMOTE_IDS = {
 ARTWORK_URL_PREFIX = 'https://artworks.thetvdb.com'
 
 
-def search_series(title, settings, handle, year=None) -> None:
+def search_series(title, settings, handle, year=None):
     # add the found shows to the list
-    logger.debug(f'Searching for TV show "{title}", year="{year}"')
+    logger.debug("Searching for TV show \"{0}\"".format(title))
 
     tvdb_client = tvdb.Client(settings)
     if year is None:
@@ -26,10 +26,10 @@ def search_series(title, settings, handle, year=None) -> None:
     else:
         search_results = tvdb_client.search(title, year=year, type="series", limit=10)
         if not search_results:
-            logger.debug(f"No results found for '{title}' where year='{year}'. Falling back to search without year criteria.")
+            logger.debug("No results found for '{0}' where year='{1}'. Falling back to search without year criteria.".format(title, year)
             search_results = tvdb_client.search(title, type="series", limit=10)
 
-    logger.debug(f'Search results {search_results}')
+    logger.debug("Search results {0}".format(search_results))
 
     if not search_results:
         return
@@ -47,7 +47,7 @@ def search_series(title, settings, handle, year=None) -> None:
             show_name = show['name']
         year = show.get('year')
         if year:
-            show_name += f' ({year})'
+            show_name += " ({0})".format(year)
 
         liz = xbmcgui.ListItem(show_name, offscreen=True)
         url = str(show['tvdb_id'])
@@ -63,7 +63,7 @@ def search_series(title, settings, handle, year=None) -> None:
 
 def get_series_details(id, settings, handle):
     # get the details of the found series
-    logger.debug(f'Find info of tvshow with id {id}')
+    logger.debug("Find info of tvshow with id {0}".format(id))
     tvdb_client = tvdb.Client(settings)
     show = tvdb_client.get_series_details_api(id, settings)
     if not show:
@@ -81,10 +81,10 @@ def get_series_details(id, settings, handle):
     year_str = show.get("firstAired") or ''
     if year_str:
         year = int(year_str.split("-")[0])
-        logger.debug(f"series year_str: {year_str}")
+        logger.debug("series year_str: {0}".format(year_str))
         details["premiered"] = year_str
         details['year'] = year
-        name = f'{name} ({year})'
+        name = "{0} ({1})".format(name, year)
     studio = get_studio(show)
     if studio:
         details["studio"] = studio
@@ -97,7 +97,7 @@ def get_series_details(id, settings, handle):
     if status:
         details['status'] = status['name']
     liz = xbmcgui.ListItem(name, offscreen=True)
-    logger.debug(f"series details: {pformat(details)}")
+    logger.debug("series details: {0}".format(pformat(details)))
     liz.setInfo('video', details)
     liz = set_cast(liz, show)
     unique_ids = get_unique_ids(show)

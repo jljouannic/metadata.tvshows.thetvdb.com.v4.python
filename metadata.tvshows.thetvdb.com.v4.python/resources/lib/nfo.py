@@ -35,7 +35,7 @@ def get_show_id_from_nfo(nfo, settings, plugin_handle):
 
     :param nfo: the contents of a NFO file
     """
-    logger.debug(f'Parsing NFO file:\n{nfo}')
+    logger.debug("Parsing NFO file:\n{0}".format(nfo))
     if '<episodedetails>' in nfo:
         return  # skip episode NFOs
     parse_result = _parse_nfo_url(nfo)
@@ -78,7 +78,7 @@ def _get_tvdb_id_from_slug(series_url):
     try:
         html = Request.make_web_request(series_url)
     except HTTPError as exc:
-        logger.error(f'Error {exc.response.status_code} for URL {series_url}')
+        logger.error("Error {0} for URL {1}".format(exc.response.status_code, series_url))
         return None
     match = TVDB_ID_REGEX.search(html)
     if match is not None:

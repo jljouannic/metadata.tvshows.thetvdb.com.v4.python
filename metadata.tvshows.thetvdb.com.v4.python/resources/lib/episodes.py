@@ -13,7 +13,7 @@ from .series import get_unique_ids, ARTWORK_URL_PREFIX
 
 
 def get_series_episodes(id, settings, handle):
-    logger.debug(f'Find episodes of tvshow with id {id}')
+    logger.debug("Find episodes of tvshow with id {0}".format(id))
     if not id.isdigit():
         # Kodi has a bug: when a show directory contains an XML NFO file with
         # episodeguide URL, that URL is always passed here regardless of
@@ -24,7 +24,7 @@ def get_series_episodes(id, settings, handle):
 
         if parse_result.provider == 'thetvdb':
             id = parse_result.show_id
-            logger.debug(f'Changed show id to {id}')
+            logger.debug("Changed show id to {0}".format(id))
 
     client = tvdb.Client(settings)
     episodes = client.get_series_episodes_api(id, settings)
@@ -59,7 +59,7 @@ def get_series_episodes(id, settings, handle):
 
 
 def get_episode_details(id, settings, handle):
-    logger.debug(f'Find info of episode with id {id}')
+    logger.debug("Find info of episode with id {0}".format(id))
     client = tvdb.Client(settings)
     ep = client.get_episode_details_api(id, settings)
     if not ep:

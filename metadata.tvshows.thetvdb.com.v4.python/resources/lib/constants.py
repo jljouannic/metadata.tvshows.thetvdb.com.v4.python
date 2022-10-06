@@ -1,3 +1,5 @@
+# coding=utf-8
+
 LANGUAGES_MAP = {
     'Abkhaz': 'abk',
     'Afar': 'aar',

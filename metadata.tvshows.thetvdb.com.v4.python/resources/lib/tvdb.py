@@ -1,5 +1,4 @@
-import enum
-import urllib.parse
+import urllib
 
 from resources.lib import simple_requests as requests
 from resources.lib.constants import LANGUAGES_MAP
@@ -10,24 +9,15 @@ apikey_with_pin = "%apikey_with_pin%"
 
 USER_AGENT = 'TheTVDB v.4 TV Scraper for Kodi'
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    reverse = dict((value, key) for key, value in enums.iteritems())
+    enums['reverse_mapping'] = reverse
+    return type('Enum', (), enums)
 
-class ArtworkType(enum.IntEnum):
-    BANNER = 1
-    POSTER = 2
-    BACKGROUND = 3
-    ICON = 5
-    CLEARART = 22
-    CLEARLOGO = 23
+ArtworkType = enum(BANNER = 1, POSTER = 2, BACKGROUND = 3, ICON = 5, CLEARART = 22, CLEARLOGO = 23)
 
-
-class SeasonType(enum.IntEnum):
-    DEFAULT = 1
-    ABSOLUTE = 2
-    DVD = 3
-    ALTERNATE = 4
-    REGIONAL = 5
-    ALTDVD = 6
-
+SeasonType = enum(DEFAULT = 1, ABSOLUTE = 2, DVD = 3, ALTERNATE = 4, REGIONAL = 5, ALTDVD = 6)
 
 class Auth:
     logger.debug("logging in")
@@ -59,7 +49,7 @@ class Request:
         self.cache = {}
 
     def make_api_request(self, url):
-        logger.debug(f"about to make request to url {url}")
+        logger.debug("about to make request to url {0}".format(url))
         logger.debug(url)
         data = self.cache.get(url, None)
         if data:
@@ -67,7 +57,7 @@ class Request:
         headers = {
             'User-Agent': USER_AGENT,
             'Accept': 'application/json',
-            'Authorization': f'Bearer {self.auth_token}'
+            'Authorization': "Bearer {0}".format(self.auth_token)
         }
         response = requests.get(url, headers=headers)
         if not response.ok:
@@ -78,7 +68,7 @@ class Request:
 
     @staticmethod
     def make_web_request(url):
-        logger.debug(f"about to make request to url {url}")
+        logger.debug("about to make request to url {0}".format(url))
         headers = {
             'User-Agent': USER_AGENT,
             'Accept': 'text/html',
@@ -178,7 +168,7 @@ class Url:
             url = "{}/extended".format(url)
         return url
 
-    def episode_translation_url(self, id: int, language: str = "eng"):
+    def episode_translation_url(self, id, language = "eng"):
         url = "{}/episodes/{}/translations/{}".format(
             self.base_url, id, language)
         return url
@@ -215,211 +205,211 @@ class Url:
 
     def search_url(self, query, filters):
         filters["query"] = query
-        qs = urllib.parse.urlencode(filters)
+        qs = urllib.urlencode(filters)
         url = "{}/search?{}".format(self.base_url, qs)
         return url
 
-    def series_translation_url(self, id: int, language="eng"):
+    def series_translation_url(self, id, language="eng"):
         url = "{}/series/{}/translations/{}".format(
             self.base_url, id, language)
         return url
 
-    def series_season_episodes_url(self, id: int, season_type_number: int = 1, page: int = 0):
-        season_type = SeasonType(season_type_number).name.lower()
+    def series_season_episodes_url(self, id, season_type_number = 1, page = 0):
+        season_type = SeasonType.reverse_mapping[season_type_number].lower()
         url = "{}/series/{}/episodes/{}?page={}".format(
             self.base_url, id, season_type, page)
         return url
 
 
 class TVDB:
-    def __init__(self, apikey: str, pin="", **kwargs):
+    def __init__(self, apikey, pin="", **kwargs):
         self.url = Url()
         login_url = self.url.login_url()
         self.auth = Auth(login_url, apikey, pin, **kwargs)
         auth_token = self.auth.get_token()
         self.request = Request(auth_token)
 
-    def get_artwork_statuses(self) -> list:
+    def get_artwork_statuses(self):
         """Returns a list of artwork statuses"""
         url = self.url.artwork_status_url()
         return self.request.make_api_request(url)
 
-    def get_artwork_types(self) -> list:
+    def get_artwork_types(self):
         """Returns a list of artwork types"""
         url = self.url.artwork_types_url()
         return self.request.make_api_request(url)
 
-    def get_artwork(self, id: int) -> dict:
+    def get_artwork(self, id):
         """Returns an artwork dictionary"""
         url = self.url.artwork_url(id)
         return self.request.make_api_request(url)
 
-    def get_artwork_extended(self, id: int) -> dict:
+    def get_artwork_extended(self, id):
         """Returns an artwork extended dictionary"""
         url = self.url.artwork_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_all_awards(self, page=0) -> list:
+    def get_all_awards(self, page=0):
         """Returns a list of awards"""
         url = self.url.awards_url(page)
         return self.request.make_api_request(url)
 
-    def get_award(self, id: int) -> dict:
+    def get_award(self, id):
         """Returns an award dictionary"""
         url = self.url.award_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_award_extended(self, id: int) -> dict:
+    def get_award_extended(self, id):
         """Returns an award extended dictionary"""
         url = self.url.award_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_all_award_categories(self) -> list:
+    def get_all_award_categories(self):
         """Returns a list of award categories"""
         url = self.url.awards_categories_url()
         return self.request.make_api_request(url)
 
-    def get_award_category(self, id: int) -> dict:
+    def get_award_category(self, id):
         """Returns an artwork category dictionary"""
         url = self.url.award_category_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_award_category_extended(self, id: int) -> dict:
+    def get_award_category_extended(self, id):
         """Returns an award category extended dictionary"""
         url = self.url.award_category_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_content_ratings(self) -> list:
+    def get_content_ratings(self):
         """Returns a list of content ratings"""
         url = self.url.content_ratings_url()
         return self.request.make_api_request(url)
 
-    def get_countries(self) -> list:
+    def get_countries(self):
         """Returns a list of countries"""
         url = self.url.countries_url()
         return self.request.make_api_request(url)
 
-    def get_all_companies(self, page=0) -> list:
+    def get_all_companies(self, page=0):
         """Returns a list of companies"""
         url = self.url.companies_url(page)
         return self.request.make_api_request(url)
 
-    def get_company(self, id: int) -> dict:
+    def get_company(self, id):
         """Returns a company dictionary"""
         url = self.url.company_url(id)
         return self.request.make_api_request(url)
 
-    def get_all_series(self, page=0) -> list:
+    def get_all_series(self, page=0):
         """Returns a list of series"""
         url = self.url.all_series_url(page)
         return self.request.make_api_request(url)
 
-    def get_series(self, id: int) -> dict:
+    def get_series(self, id):
         """Returns a series dictionary"""
         url = self.url.series_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_series_extended(self, id: int) -> dict:
+    def get_series_extended(self, id):
         """Returns an series extended dictionary"""
         url = self.url.series_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_series_translation(self, id: int, lang: str) -> dict:
+    def get_series_translation(self, id, lang):
         """Returns a series translation dictionary"""
         url = self.url.series_translation_url(id, lang)
         return self.request.make_api_request(url)
 
-    def get_all_movies(self, page=0) -> list:
+    def get_all_movies(self, page=0):
         """Returns a list of movies"""
         url = self.url.movies_url(page)
         return self.request.make_api_request(url)
 
-    def get_movie(self, id: int) -> dict:
+    def get_movie(self, id):
         """Returns a movie dictionary"""
         url = self.url.movie_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_movie_extended(self, id: int) -> dict:
+    def get_movie_extended(self, id):
         """Returns a movie extended dictionary"""
         url = self.url.movie_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_movie_translation(self, lang: str) -> dict:
+    def get_movie_translation(self, lang):
         """Returns a movie translation dictionary"""
         url = self.url.movie_translation_url(id, lang)
         return self.request.make_api_request(url)
 
-    def get_season(self, id: int) -> dict:
+    def get_season(self, id):
         """Returns a season dictionary"""
         url = self.url.season_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_season_extended(self, id: int) -> dict:
+    def get_season_extended(self, id):
         """Returns a season extended dictionary"""
         url = self.url.season_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_episode(self, id: int) -> dict:
+    def get_episode(self, id):
         """Returns an episode dictionary"""
         url = self.url.episode_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_episode_translation(self, id: int, lang: str) -> dict:
+    def get_episode_translation(self, id, lang):
         """Returns an episode translation dictionary"""
         url = self.url.episode_translation_url(id, lang)
         return self.request.make_api_request(url)
 
-    def get_episode_extended(self, id: int) -> dict:
+    def get_episode_extended(self, id):
         """Returns an episode extended dictionary"""
         url = self.url.episode_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_person(self, id: int) -> dict:
+    def get_person(self, id):
         """Returns a person dictionary"""
         url = self.url.person_url(id, False)
         return self.request.make_api_request(url)
 
-    def get_person_extended(self, id: int) -> dict:
+    def get_person_extended(self, id):
         """Returns a person extended dictionary"""
         url = self.url.person_url(id, True)
         return self.request.make_api_request(url)
 
-    def get_character(self, id: int) -> dict:
+    def get_character(self, id):
         """Returns a character dictionary"""
         url = self.url.character_url(id)
         return self.request.make_api_request(url)
 
-    def get_all_people_types(self) -> list:
+    def get_all_people_types(self):
         """Returns a list of people types"""
         url = self.url.people_types_url()
         return self.request.make_api_request(url)
 
-    def get_all_sourcetypes(self) -> list:
+    def get_all_sourcetypes(self):
         """Returns a list of sourcetypes"""
         url = self.url.source_types_url()
         return self.request.make_api_request(url)
 
-    def get_updates(self, since: int) -> list:
+    def get_updates(self, since):
         """Returns a list of updates"""
         url = self.url.updates_url(since)
         return self.request.make_api_request(url)
 
-    def get_all_tag_options(self, page=0) -> list:
+    def get_all_tag_options(self, page=0):
         """Returns a list of tag options"""
         url = self.url.tag_options_url()
         return self.request.make_api_request(url)
 
-    def get_tag_option(self, id: int) -> dict:
+    def get_tag_option(self, id):
         """Returns a tag option dictionary"""
         url = self.url.tag_option_url(id)
         return self.request.make_api_request(url)
 
-    def search(self, query, **kwargs) -> list:
+    def search(self, query, **kwargs):
         """Returns a list of search results"""
         url = self.url.search_url(query, kwargs)
         return self.request.make_api_request(url)
 
-    def get_series_season_episodes(self, id: int, season_type: int = 1):
+    def get_series_season_episodes(self, id, season_type = 1):
         page = 0
         episodes = []
         while True:
@@ -431,14 +421,14 @@ class TVDB:
             episodes.extend(res)
         return episodes
 
-    def get_series_details_api(self, id, settings=None) -> dict:
+    def get_series_details_api(self, id, settings=None):
         settings = settings or {}
         series = self.get_series_extended(id)
         language = get_language(settings)
         try:
             translation = self.get_series_translation(id, language)
         except requests.HTTPError as exc:
-            logger.warning(f'{language} translation is not available: {exc}')
+            logger.warning("{0} translation is not available: {1}".format(language, exc))
             translation = {}
         overview = translation.get("overview") or ''
         name = translation.get("name") or ''
@@ -446,7 +436,7 @@ class TVDB:
             try:
                 english_info = self.get_series_translation(id, 'eng')
             except requests.HTTPError as exc:
-                logger.warning(f'eng info is not available: {exc}')
+                logger.warning("eng info is not available: {0}".format(exc))
                 english_info = {}
             if not overview:
                 overview = english_info.get('overview') or ''
@@ -461,16 +451,15 @@ class TVDB:
         season_type = get_season_type(settings)
         result = self.get_series_season_episodes(id, season_type)
         if not result:
-            season_type_name = SeasonType(season_type).name.lower()
-            logger.warning(
-                f'No episodes returned for show {id}, season type "{season_type_name}"')
+            season_type_name = SeasonType.reverse_mapping[season_type].lower()
+            logger.warning("No episodes returned for show {0}, season type \"{1}\"".format(id, season_type_name))
         return result
 
     def get_episode_details_api(self, id, settings):
         try:
             ep = self.get_episode_extended(id)
         except requests.HTTPError as e:
-            logger.warning(f'No episode found with id={id}. [error: {e}]')
+            logger.warning("No episode found with id={0}. [error: {1}]".format(id, e))
             return None
 
         trans = None
@@ -485,7 +474,7 @@ class TVDB:
                 break
             except requests.HTTPError as e:
                 logger.warning(
-                    f'No episode found with id={id} and language={language}. [error: {e}]')
+                    "No episode found with id={0} and language={1}. [error: {2}]".format(id, language, e)
 
         if not trans:
             return None
@@ -531,7 +520,7 @@ class Client(object):
         return cls._instance
 
 
-def get_artworks_from_show(show: dict, language: str = 'eng'):
+def get_artworks_from_show(show, language = 'eng'):
 
     def sorter(item):
         item_language = item.get('language')

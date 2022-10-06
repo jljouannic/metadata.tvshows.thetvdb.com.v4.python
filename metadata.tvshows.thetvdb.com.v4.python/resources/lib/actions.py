@@ -1,8 +1,7 @@
 import json
 import sys
-import urllib.error
-import urllib.parse
-import urllib.request
+import urlparse
+import urllib
 
 import xbmcplugin
 
@@ -16,16 +15,16 @@ from .utils import create_uuid, logger, ADDON
 def run():
     handle = int(sys.argv[1])
     qs = sys.argv[2][1:]
-    params = dict(urllib.parse.parse_qsl(qs))
+    params = dict(urlparse.parse_qsl(qs))
     logger.debug("THE TVDB TV SHOWS SCRAPER V.4")
     logger.debug(params)
 
     _action = params.get("action", "")
-    action = urllib.parse.unquote_plus(_action)
+    action = urllib.unquote_plus(_action)
     _settings = params.get("pathSettings", "{}")
     settings = json.loads(_settings)
     _title = params.get("title", "")
-    title = urllib.parse.unquote_plus(_title)
+    title = urllib.unquote_plus(_title)
     year = params.get("year", None)
 
     uuid = settings.get("uuid", None)
@@ -44,18 +43,18 @@ def run():
         elif action == 'getdetails' and 'url' in params:
             logger.debug("about to call get series details")
             get_series_details(
-                urllib.parse.unquote_plus(params["url"]), settings, handle)
+                urllib.unquote_plus(params["url"]), settings, handle)
         elif action == 'getepisodelist' and 'url' in params:
             logger.debug("about to call get series episodes")
             get_series_episodes(
-                urllib.parse.unquote_plus(params["url"]), settings, handle)
+                urllib.unquote_plus(params["url"]), settings, handle)
         elif action == 'getepisodedetails' and 'url' in params:
             logger.debug("about to call get episode details")
             get_episode_details(
-                urllib.parse.unquote_plus(params["url"]), settings, handle)
+                urllib.unquote_plus(params["url"]), settings, handle)
         elif action == 'getartwork' and 'id' in params:
             logger.debug("about to call get artworks")
-            get_artworks(urllib.parse.unquote_plus(
+            get_artworks(urllib.unquote_plus(
                 params["id"]), settings, handle)
         elif params['action'].lower() == 'nfourl':
             logger.debug('performing nfourl action')
