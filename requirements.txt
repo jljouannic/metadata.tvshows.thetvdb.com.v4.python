@@ -1,1 +1,1 @@
-Kodistubs
+Kodistubs==18.0.0
